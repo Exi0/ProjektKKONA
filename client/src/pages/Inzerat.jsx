@@ -15,6 +15,7 @@ import 'react-image-gallery/styles/css/image-gallery.css';
 import { MapContainer, TileLayer, Marker, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import DealPanel from '../components/DealPanel';
+import DOMPurify from "dompurify";
 
 const unitLabel = { ha: 'Kč/ha', h: 'Kč/h', t: 'Kč/t', kg: 'Kč/kg' };
 const quantityLabelByUnit = { ha: 'Rozsah (ha)', h: 'Počet hodin', t: 'Množství (t)', kg: 'Množství (kg)' };
@@ -322,7 +323,7 @@ const Inzerat = () => {
                   <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Popis zakázky</h3>
                   <div
                     className="prose prose-sm max-w-none text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: popis }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(popis) }}
                   />
                 </div>
               )}

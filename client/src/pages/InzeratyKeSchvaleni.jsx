@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { CheckIcon, XMarkIcon,ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from 'react-router-dom';
+import DOMPurify from "dompurify";
 const InzeratyKeSchvaleni = () => {
   const { backendUrl, userData } = useContext(AppContent);
   const [pending, setPending] = useState([]);
@@ -121,7 +122,7 @@ const InzeratyKeSchvaleni = () => {
                 {item.popis && (
                   <div
                     className="prose max-w-none text-sm text-gray-700 mt-2 line-clamp-3 overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: item.popis }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.popis) }}
                   />
                 )}
 
