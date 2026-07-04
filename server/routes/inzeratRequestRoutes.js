@@ -1,0 +1,10 @@
+import express from 'express';
+import userAuth from '../middleware/userAuth.js';
+import { requestInzeratChange,approveInzeratChange,rejectInzeratChange,getPendingInzeratChanges,getInzeratChangeDetail } from '../controllers/inzeratChangeController.js';
+const inzeratRequestRouter = express.Router();
+inzeratRequestRouter.post('/approveInzeratChange', userAuth, approveInzeratChange);
+inzeratRequestRouter.post('/rejectInzeratChange', userAuth, rejectInzeratChange);
+inzeratRequestRouter.post('/requestInzeratChange', userAuth, requestInzeratChange);
+inzeratRequestRouter.get("/getPendingInzeratChanges", userAuth, getPendingInzeratChanges);
+inzeratRequestRouter.get("/getInzeratChangeDetail/:requestId", userAuth, getInzeratChangeDetail);
+export default inzeratRequestRouter;
