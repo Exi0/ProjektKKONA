@@ -1,7 +1,7 @@
 import inzeratChangeRequestModel from "../models/inzeratChangeRequest.js";
 import inzeratModel from "../models/inzeratModel.js";
 
-export const requestInzeratChange = async (req, res) => {
+export const requestInzeratChange = async (req, res, next) => {
   try {
     const { inzeratId, newData } = req.body;
     const userId = req.userId;
@@ -39,12 +39,12 @@ export const requestInzeratChange = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ requestInzeratChange ERROR:", err);
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 
-export const approveInzeratChange = async (req, res) => {
+export const approveInzeratChange = async (req, res, next) => {
   try {
     const { requestId } = req.body;
 
@@ -73,10 +73,10 @@ export const approveInzeratChange = async (req, res) => {
       message: "Změny inzerátu byly schváleny"
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
-export const rejectInzeratChange = async (req, res) => {
+export const rejectInzeratChange = async (req, res, next) => {
   try {
     const { requestId } = req.body;
 
@@ -98,10 +98,10 @@ export const rejectInzeratChange = async (req, res) => {
       message: "Změny byly zamítnuty"
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
-export const getPendingInzeratChanges = async (req, res) => {
+export const getPendingInzeratChanges = async (req, res, next) => {
   const requests = await inzeratChangeRequestModel.find({ status: "pending" })
     .populate("inzeratId", "nadpis popis kategorie ukon cenaPerHa ha cenaType stat kraj mesto parcelLink")
     .populate("userId", "name email")
@@ -116,7 +116,7 @@ export const getPendingInzeratChanges = async (req, res) => {
     }))
   });
 };
-export const getInzeratChangeDetail = async (req, res) => {
+export const getInzeratChangeDetail = async (req, res, next) => {
   try {
     const { requestId } = req.params;
 
@@ -154,9 +154,6 @@ export const getInzeratChangeDetail = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ getInzeratChangeDetail ERROR:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    return next(err);
   }
 };

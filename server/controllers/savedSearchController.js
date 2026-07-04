@@ -2,7 +2,7 @@ import savedSearchModel from "../models/savedSearchModel.js";
 
 const MAX_SAVED = 10;
 
-export const createSavedSearch = async (req, res) => {
+export const createSavedSearch = async (req, res, next) => {
   try {
     const userId = req.userId;
     const count = await savedSearchModel.countDocuments({ user: userId });
@@ -29,11 +29,11 @@ export const createSavedSearch = async (req, res) => {
     return res.json({ success: true, message: "Hledání uloženo", savedSearch: saved });
   } catch (err) {
     console.error("❌ createSavedSearch:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
-export const getMySavedSearches = async (req, res) => {
+export const getMySavedSearches = async (req, res, next) => {
   try {
     const list = await savedSearchModel
       .find({ user: req.userId })
@@ -41,11 +41,11 @@ export const getMySavedSearches = async (req, res) => {
       .lean();
     return res.json({ success: true, savedSearches: list });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
-export const deleteSavedSearch = async (req, res) => {
+export const deleteSavedSearch = async (req, res, next) => {
   try {
     const result = await savedSearchModel.findOneAndDelete({
       _id: req.params.id,
@@ -54,11 +54,11 @@ export const deleteSavedSearch = async (req, res) => {
     if (!result) return res.status(404).json({ success: false, message: "Nenalezeno" });
     return res.json({ success: true, message: "Hledání odstraněno" });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
-export const toggleAlert = async (req, res) => {
+export const toggleAlert = async (req, res, next) => {
   try {
     const saved = await savedSearchModel.findOne({ _id: req.params.id, user: req.userId });
     if (!saved) return res.status(404).json({ success: false, message: "Nenalezeno" });
@@ -66,7 +66,7 @@ export const toggleAlert = async (req, res) => {
     await saved.save();
     return res.json({ success: true, alertEnabled: saved.alertEnabled });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 

@@ -4,10 +4,14 @@ import userModel from "../models/userModel.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export const createCheckout = async (req, res) => {
+export const createCheckout = async (req, res, next) => {
+  console.log("start")
   try {
     const { type, targetUserId } = req.body;
     const userId = req.userId;
+    console.log(userId)
+    console.log(type)
+    console.log(targetUserId)
     if (!["unlock_profile", "subscription"].includes(type)) {
       return res.status(400).json({ success: false, message: "Invalid type" });
     }
@@ -67,9 +71,11 @@ export const createCheckout = async (req, res) => {
   }
 };
 
-export const createSubscriptionCheckout = async (req, res) => {
+export const createSubscriptionCheckout = async (req, res, next) => {
+  console.log("start subcription")
   try {
     const userId = req.userId;
+    console.log(userId)
     if (!userId) {
       return res.status(401).json({ success: false, message: "User not authenticated" });
     }
@@ -92,7 +98,6 @@ export const createSubscriptionCheckout = async (req, res) => {
       status: "pending",
       provider: "stripe"
     });
-    console.log(payment)
     // 🧠 Subscription jde přes mode: "subscription"
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

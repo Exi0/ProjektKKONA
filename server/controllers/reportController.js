@@ -2,7 +2,7 @@ import reportModel from "../models/reportModel.js";
 import userModel from "../models/userModel.js";
 
 // 📌 Uživatel nahlásí jiného uživatele
-export const createReport = async (req, res) => {
+export const createReport = async (req, res, next) => {
   try {
     const fromUserId = req.userId; // ✅ z userAuth middleware
     const { reportedUserId, reason } = req.body;
@@ -19,12 +19,12 @@ export const createReport = async (req, res) => {
 
     res.json({ success: true, message: "Nahlášení bylo odesláno.", report });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // 📌 Admin – seznam všech reportů
-export const getReports = async (req, res) => {
+export const getReports = async (req, res, next) => {
   try {
     const reports = await reportModel
       .find()
@@ -33,17 +33,17 @@ export const getReports = async (req, res) => {
 
     res.json({ success: true, reports });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // 📌 Admin – smazat report
-export const deleteReport = async (req, res) => {
+export const deleteReport = async (req, res, next) => {
   try {
     const { id } = req.params;
     await reportModel.findByIdAndDelete(id);
     res.json({ success: true, message: "Report byl odstraněn." });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };

@@ -1,7 +1,7 @@
 import notificationModel from "../models/notificationModel.js";
 
 // ✅ Načíst notifikace přihlášeného uživatele (stránkované, nejnovější první)
-export const getMyNotifications = async (req, res) => {
+export const getMyNotifications = async (req, res, next) => {
   try {
     const userId = req.userId;
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -31,12 +31,12 @@ export const getMyNotifications = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ getMyNotifications error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ✅ Počet nepřečtených (lehký endpoint pro badge)
-export const getUnreadCount = async (req, res) => {
+export const getUnreadCount = async (req, res, next) => {
   try {
     const count = await notificationModel.countDocuments({
       recipient: req.userId,
@@ -44,12 +44,12 @@ export const getUnreadCount = async (req, res) => {
     });
     return res.json({ success: true, unreadCount: count });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ✅ Označit jednu notifikaci jako přečtenou
-export const markAsRead = async (req, res) => {
+export const markAsRead = async (req, res, next) => {
   try {
     const { notificationId } = req.params;
     const notification = await notificationModel.findOneAndUpdate(
@@ -62,12 +62,12 @@ export const markAsRead = async (req, res) => {
     }
     return res.json({ success: true, notification });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ✅ Označit všechny jako přečtené
-export const markAllAsRead = async (req, res) => {
+export const markAllAsRead = async (req, res, next) => {
   try {
     await notificationModel.updateMany(
       { recipient: req.userId, read: false },
@@ -75,6 +75,6 @@ export const markAllAsRead = async (req, res) => {
     );
     return res.json({ success: true, message: "Všechny notifikace označeny jako přečtené" });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };

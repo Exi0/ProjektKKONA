@@ -3,7 +3,7 @@ import userModel from '../models/userModel.js';
 import { createNotification } from "../services/notificationService.js";
 import fs from 'fs';
 
-export const uploadImages = async (req, res) => {
+export const uploadImages = async (req, res, next) => {
   try {
     // ✅ FIX: identita vždy z ověřeného tokenu (req.userId z userAuth),
     // NIKDY z req.body – dříve šlo nahrát obrázek (i avatar!) cizímu uživateli
@@ -60,24 +60,24 @@ export const uploadImages = async (req, res) => {
     });
   } catch (err) {
     console.error('❌ CHYBA uploadImages:', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
-export const getPendingImages = async (req, res) => {
+export const getPendingImages = async (req, res, next) => {
   try {
     const images = await imageModel
       .find({ approved: false }).sort({ createdAt: -1 });
     res.json({ success: true, images });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 /**
  * ✅ Schválit obrázek (pouze admin – viz adminAuth v routes)
  */
-export const approveImage = async (req, res) => {
+export const approveImage = async (req, res, next) => {
   try {
     // ✅ FIX: imageId čteme z URL parametru (route je /approveImage/:imageId),
     // dříve se četl z req.body, který frontend posílat nemusí
@@ -113,14 +113,14 @@ export const approveImage = async (req, res) => {
       });
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 /**
  * ❌ Zamítnout obrázek (pouze admin – viz adminAuth v routes)
  */
-export const rejectImage = async (req, res) => {
+export const rejectImage = async (req, res, next) => {
   try {
     const imageId = req.params.imageId;
     const image = await imageModel.findByIdAndDelete(imageId);
@@ -156,6 +156,6 @@ export const rejectImage = async (req, res) => {
       });
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };

@@ -20,7 +20,7 @@ const isWinner = (inzerat, userId) =>
 // 1) NAVRHNOUT PODMÍNKY (owner nebo winner — první krok po selectWinner)
 //    Kdo navrhuje, ten automaticky i potvrzuje.
 // ═══════════════════════════════════════════════════════════════════
-export const proposeTerms = async (req, res) => {
+export const proposeTerms = async (req, res, next) => {
   try {
     const { inzeratId, agreedPrice, agreedDate, agreedNote } = req.body;
     const userId = req.userId;
@@ -76,7 +76,7 @@ export const proposeTerms = async (req, res) => {
     return res.json({ success: true, message: "Podmínky navrženy", inzerat });
   } catch (err) {
     console.error("❌ proposeTerms error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -85,7 +85,7 @@ export const proposeTerms = async (req, res) => {
 // 2) POTVRDIT PODMÍNKY (druhá strana)
 //    Jakmile obě strany potvrdí → stav "Probíhá"
 // ═══════════════════════════════════════════════════════════════════
-export const confirmTerms = async (req, res) => {
+export const confirmTerms = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const userId = req.userId;
@@ -144,7 +144,7 @@ export const confirmTerms = async (req, res) => {
     return res.json({ success: true, message: "Podmínky potvrzeny", inzerat });
   } catch (err) {
     console.error("❌ confirmTerms error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -152,7 +152,7 @@ export const confirmTerms = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 // 3) OZNAČIT JAKO HOTOVÉ (dodavatel nebo objednatel)
 // ═══════════════════════════════════════════════════════════════════
-export const markComplete = async (req, res) => {
+export const markComplete = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const userId = req.userId;
@@ -192,7 +192,7 @@ export const markComplete = async (req, res) => {
     return res.json({ success: true, message: "Zakázka označena jako hotová", inzerat });
   } catch (err) {
     console.error("❌ markComplete error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -200,7 +200,7 @@ export const markComplete = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 // 4) POTVRDIT DOKONČENÍ (druhá strana) → "Dokončeno", odemkne hodnocení
 // ═══════════════════════════════════════════════════════════════════
-export const confirmCompletion = async (req, res) => {
+export const confirmCompletion = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const userId = req.userId;
@@ -251,7 +251,7 @@ export const confirmCompletion = async (req, res) => {
     return res.json({ success: true, message: "Zakázka dokončena!", inzerat });
   } catch (err) {
     console.error("❌ confirmCompletion error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -259,7 +259,7 @@ export const confirmCompletion = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 // 5) NAHLÁSIT SPOR
 // ═══════════════════════════════════════════════════════════════════
-export const disputeDeal = async (req, res) => {
+export const disputeDeal = async (req, res, next) => {
   try {
     const { inzeratId, reason } = req.body;
     const userId = req.userId;
@@ -304,7 +304,7 @@ export const disputeDeal = async (req, res) => {
     return res.json({ success: true, message: "Spor nahlášen", inzerat });
   } catch (err) {
     console.error("❌ disputeDeal error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -313,7 +313,7 @@ export const disputeDeal = async (req, res) => {
 // 6) HODNOCENÍ V RÁMCI DEALU (nahrazuje nebo doplňuje stávající addRating)
 //    Povoleno jen po "Dokončeno" a jen jednou za stranu.
 // ═══════════════════════════════════════════════════════════════════
-export const rateDealParticipant = async (req, res) => {
+export const rateDealParticipant = async (req, res, next) => {
   try {
     const { inzeratId, reliability, communication, quality, comment } = req.body;
     const fromUserId = req.userId;
@@ -382,6 +382,6 @@ export const rateDealParticipant = async (req, res) => {
     return res.json({ success: true, message: "Hodnocení přidáno" });
   } catch (err) {
     console.error("❌ rateDealParticipant error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
