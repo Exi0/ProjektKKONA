@@ -37,7 +37,7 @@ connectDB()
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173'];
-
+console.log("ALLOWED ORIGINS =", JSON.stringify(allowedOrigins)); // ← temp debug
 // ✅ NOVÉ: bezpečnostní HTTP hlavičky
 // crossOriginResourcePolicy: "cross-origin" → aby frontend mohl načítat /uploads obrázky
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
