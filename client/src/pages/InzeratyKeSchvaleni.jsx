@@ -13,6 +13,7 @@ const InzeratyKeSchvaleni = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   useEffect(() => {
+    
         if (!userData) return; // počkej na načtení dat
         if (userData.role !== "admin") {
             toast.error("Nemáte oprávnění pro přístup k této stránce.");
