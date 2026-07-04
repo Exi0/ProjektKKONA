@@ -116,6 +116,7 @@ export const sendVerifyOtp = async (req, res, next) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
     user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+    user.verifyOtpAttempts = 0; // ✅ nový kód → vynulovat pokusy
     await user.save();
 
     // 📨 E-mail
@@ -147,15 +148,28 @@ export const verifyEmail = async (req,res,next)=>{
         if(!user){
             return res.json({success:false, message:'Uživatel nenalezen'})
         }
-        if(user.verifyOtp===''||user.verifyOtp!==otp){
+        if(user.verifyOtp===''){
             return res.json({success:false, message:'Kod je invalidní'})
         }
         if(user.verifyOtpExpireAt < Date.now()){
             return res.json({success:false, message:'Kod je expirován'})
         }
+        // ✅ limit pokusů – ochrana proti brute-force 6místného kódu
+        if(user.verifyOtpAttempts >= 5){
+            user.verifyOtp='';
+            user.verifyOtpExpireAt=0;
+            await user.save();
+            return res.json({success:false, message:'Příliš mnoho pokusů. Vyžádejte si nový kód.'})
+        }
+        if(user.verifyOtp!==otp){
+            user.verifyOtpAttempts += 1;
+            await user.save();
+            return res.json({success:false, message:'Kod je invalidní'})
+        }
         user.isAccountVerified=true;
         user.verifyOtp='';
         user.verifyOtpExpireAt=0;
+        user.verifyOtpAttempts=0;
 
         await user.save();
         return res.json({success:true,message:'Email ověren'
@@ -187,7 +201,8 @@ export const sendResetOtp = async (req,res,next)=>{
 
         user.resetOtp = otp;
         user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000
-        
+        user.resetOtpAttempts = 0; // ✅ nový kód → vynulovat pokusy
+
         await user.save();
 
         const mailOption = {
@@ -214,17 +229,30 @@ export const resetPassword = async (req,res,next)=>{
         if(!user){
             return res.json({success:false,message:"Uživatel nenalezen"})
         }
-        if(user.resetOtp===""||user.resetOtp!==otp){
+        if(user.resetOtp===""){
             return res.json({success:false,message:"Invalidní kod"})
         }
         if(user.resetOtpExpireAt < Date.now()){
             return res.json({success:false,message:"Kod je expirovaný"})
+        }
+        // ✅ limit pokusů – ochrana proti brute-force 6místného kódu
+        if(user.resetOtpAttempts >= 5){
+            user.resetOtp="";
+            user.resetOtpExpireAt=0;
+            await user.save();
+            return res.json({success:false,message:"Příliš mnoho pokusů. Vyžádejte si nový kód."})
+        }
+        if(user.resetOtp!==otp){
+            user.resetOtpAttempts += 1;
+            await user.save();
+            return res.json({success:false,message:"Invalidní kod"})
         }
 
         const hashedPassword= await bcrypt.hash(newPassword,10)
         user.heslo=hashedPassword;
         user.resetOtp="";
         user.resetOtpExpireAt=0;
+        user.resetOtpAttempts=0;
 
         await user.save()
 

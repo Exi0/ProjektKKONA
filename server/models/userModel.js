@@ -28,9 +28,11 @@ const userSchema = new mongoose.Schema({
   ico:{type: String, required:true,unique:true},
   verifyOtp: {type: String, default:''},
   verifyOtpExpireAt: {type: Number, default:0},
+  verifyOtpAttempts: {type: Number, default:0}, // ✅ počet chybných pokusů o ověření
   isAccountVerified:{type: Boolean, default:false},
   resetOtp:{type: String, default:''},
   resetOtpExpireAt:{type: Number, default:0},
+  resetOtpAttempts:{type: Number, default:0}, // ✅ počet chybných pokusů o reset hesla
   role: { type: String, enum: ["user", "admin"], default: "user" },
 
   // ✅ New fields for profile editing
