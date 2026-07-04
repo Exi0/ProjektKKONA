@@ -5,7 +5,6 @@ import userModel from "../models/userModel.js";
 export const createReport = async (req, res) => {
   try {
     const fromUserId = req.userId; // ✅ z userAuth middleware
-console.log(req.body)
     const { reportedUserId, reason } = req.body;
 
     if (!reportedUserId || !reason) {

@@ -95,7 +95,6 @@ export const logout = async (req,res)=>{
 export const sendVerifyOtp = async (req, res) => {
   try {
     const { userId } = req.body;
-    console.log("📩 sendVerifyOtp request body:", req.body);
 
     if (!userId) {
       return res.json({ success: false, message: "Chybí userId" });
@@ -127,8 +126,6 @@ export const sendVerifyOtp = async (req, res) => {
       subject: "✅ Ověření účtu – Projekt KKONA",
       html: htmlContent,
     };
-
-    console.log("📤 Odesílám ověřovací e-mail na:", user.email);
     await transporter.sendMail(mailOptions);
 
     res.json({ success: true, message: "Ověřovací kód byl odeslán na e-mail." });
@@ -138,9 +135,7 @@ export const sendVerifyOtp = async (req, res) => {
   }
 };
 export const verifyEmail = async (req,res)=>{
-    console.log(req)
     const {userId,otp}= req.body;
-    console.log({userId,otp})
     if(!userId || !otp){
         return res.json({success:false, message:'Chybějící údaje'})
     }

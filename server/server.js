@@ -87,11 +87,17 @@ app.use("/api/deal", dealRouter);
 app.use("/api/saved-searches", savedSearchRouter);
 // ✅ NOVÉ: error handler pro multer (nepovolený typ souboru / příliš velký soubor)
 app.use((err, req, res, next) => {
-  if (err) {
-    const status = err.name === 'MulterError' ? 400 : 500;
-    return res.status(status).json({ success: false, message: err.message });
+  console.error(err); // full detail stays in server logs only
+
+  // Multer (upload) chyby mají srozumitelné hlášky → necháme projít
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ success: false, message: err.message });
   }
-  next();
+
+  const status = err.status || 500;
+  // 5xx → generická hláška ven; 4xx (např. validace) → původní zpráva
+  const message = status >= 500 ? 'Chyba serveru' : err.message;
+  return res.status(status).json({ success: false, message });
 });
 
 const httpServer = createServer(app);

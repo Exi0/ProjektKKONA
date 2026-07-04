@@ -5,13 +5,9 @@ import userModel from "../models/userModel.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createCheckout = async (req, res) => {
-  console.log("start")
   try {
     const { type, targetUserId } = req.body;
     const userId = req.userId;
-    console.log(userId)
-    console.log(type)
-    console.log(targetUserId)
     if (!["unlock_profile", "subscription"].includes(type)) {
       return res.status(400).json({ success: false, message: "Invalid type" });
     }
@@ -35,7 +31,6 @@ export const createCheckout = async (req, res) => {
       provider: "stripe"
     });
 
-    console.log(payment)
     // 2) vytvoř Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -61,7 +56,6 @@ export const createCheckout = async (req, res) => {
       success_url: `${process.env.FRONTEND_URL}/payment-success`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`
     });
-    console.log(session)
     // 3) ulož Stripe session ID
     payment.providerPaymentId = session.id;
     await payment.save();
@@ -74,10 +68,8 @@ export const createCheckout = async (req, res) => {
 };
 
 export const createSubscriptionCheckout = async (req, res) => {
-  console.log("start subcription")
   try {
     const userId = req.userId;
-    console.log(userId)
     if (!userId) {
       return res.status(401).json({ success: false, message: "User not authenticated" });
     }

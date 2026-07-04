@@ -14,7 +14,6 @@ export const sendProfileChangeMail = async (adminEmail, user, diffHTML) => {
       html: PROFILE_CHANGE_ADMIN_TEMPLATE(user, diffHTML)
     });
 
-    console.log("✔ Email adminovi odeslán");
   } catch (err) {
     console.error("❌ Chyba při posílání emailu adminovi:", err);
   }
@@ -44,7 +43,6 @@ export function generateProfileDiffHTML(oldData, newData) {
 export const requestProfileChange = async (req, res) => {
   try {
     const userId = req.userId;
-    console.log("Data v požadavku:", req.body);
     const user = await userModel.findById(userId);
     if (!user) return res.json({ success: false, message: "User not found" });
 
@@ -60,8 +58,6 @@ export const requestProfileChange = async (req, res) => {
       phones: toArray(req.body.phone),
       specializace: toArray(req.body.specializace),
     };
-
-    console.log("New Data before save:", newData)
 
     // Současná data pro porovnání
     const oldData = {
@@ -101,18 +97,14 @@ export const requestProfileChange = async (req, res) => {
     res.json({ success: true, message: "Change request created" });
 
   } catch (err) {
-    console.log(err);
     res.json({ success: false, message: "Failed to create request" });
   }
 };
 
 export const approveProfileChange = async (req, res) => {
   try {
-    console.log(req.params)
     const  changeId  = req.params.changeId;
-    console.log(changeId)
     const request = await ProfileChangeRequest.findById(changeId);
-    console.log(request)
     if (!request) return res.json({ success: false, message: "Request not found" });
 
     const user = await userModel.findById(request.userId);
@@ -163,7 +155,6 @@ export const approveProfileChange = async (req, res) => {
 };
 export const rejectProfileChange = async (req, res) => {
   const changeId = req.params.changeId;
-  console.log(changeId)
   const change = await ProfileChangeRequest.findById(changeId);
   if (!change) return res.json({ success: false, message: "Request not found" });
 
