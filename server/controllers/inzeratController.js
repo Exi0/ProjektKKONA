@@ -32,7 +32,7 @@ const sanitizePopis = (html) =>
   });
 
 // ✅ Vytvořit inzerát
-export const createItem = async (req, res) => {
+export const createItem = async (req, res, next) => {
   try {
     const {
       userId,
@@ -147,7 +147,7 @@ export const createItem = async (req, res) => {
 const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ✅ Veřejné inzeráty – stránkování + filtrování + řazení NA SERVERU
-export const getInzeratData = async (req, res) => {
+export const getInzeratData = async (req, res, next) => {
   try {
     // ---- vstupy z query ----
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -272,24 +272,24 @@ export const getInzeratData = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Chyba při načítání inzerátů:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ✅ Inzeráty uživatele
-export const getUserInzerats = async (req, res) => {
+export const getUserInzerats = async (req, res, next) => {
   try {
     const userId = req.user?.id || req.body.userId || req.query.userId;
     const inzerats = await inzeratModel.find({ user: userId });
     if (!inzerats.length) return res.json({ success: false, message: "Žádné inzeráty" });
     res.json({ success: true, inzeratData: inzerats });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ✅ Detail inzerátu
-export const getInzeratItemData = async (req, res) => {
+export const getInzeratItemData = async (req, res, next) => {
   try {
     const { inzeratId } = req.query;
     const inzerat = await inzeratModel
@@ -301,12 +301,12 @@ export const getInzeratItemData = async (req, res) => {
     res.json({ success: true, inzeratData: { ...inzerat._doc } });
   } catch (error) {
     console.error("❌ Chyba v getInzeratItemData:", error);
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ✅ Smazat
-export const deleteInzerat = async (req, res) => {
+export const deleteInzerat = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     if (!inzeratId) {
@@ -332,7 +332,7 @@ export const deleteInzerat = async (req, res) => {
 };
 
 // ✅ Upravit
-export const editInzerat = async (req, res) => {
+export const editInzerat = async (req, res, next) => {
   try {
     const {
       inzeratId,
@@ -408,7 +408,7 @@ export const editInzerat = async (req, res) => {
 };
 
 // ✅ Oblíbené
-export const addToFavoriteInzerat = async (req, res) => {
+export const addToFavoriteInzerat = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const updated = await inzeratModel.findByIdAndUpdate(
@@ -419,11 +419,11 @@ export const addToFavoriteInzerat = async (req, res) => {
     if (!updated) return res.json({ success: false, message: "Inzerát nenalezen" });
     res.json({ success: true, message: "Přidán do oblíbených", result: updated });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
-export const removeFromFavoriteInzerat = async (req, res) => {
+export const removeFromFavoriteInzerat = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const updated = await inzeratModel.findByIdAndUpdate(
@@ -434,11 +434,11 @@ export const removeFromFavoriteInzerat = async (req, res) => {
     if (!updated) return res.json({ success: false, message: "Inzerát nenalezen" });
     res.json({ success: true, message: "Odebrán z oblíbených", result: updated });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
-export const getUserFavoriteInzerats = async (req, res) => {
+export const getUserFavoriteInzerats = async (req, res, next) => {
   try {
     const userId = req.user?.id || req.body.userId || req.query.userId;
     if (!userId) {
@@ -453,13 +453,13 @@ export const getUserFavoriteInzerats = async (req, res) => {
 
     return res.json({ success: true, inzeratData: inzerats, count: inzerats.length });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ✅ Zájemci (ponecháno)
 // 📨 Přidání zájemce se zprávou + e-mail notifikace
-export const addInterestedUser = async (req, res) => {
+export const addInterestedUser = async (req, res, next) => {
   try {
     const { userId, inzeratId, text } = req.body;
 
@@ -522,12 +522,12 @@ export const addInterestedUser = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ addInterestedUser error:", error);
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ❌ Odebrání zájemce + e-mail notifikace
-export const removeInterestedUser = async (req, res) => {
+export const removeInterestedUser = async (req, res, next) => {
   try {
     const { userId, inzeratId } = req.body;
 
@@ -575,23 +575,23 @@ export const removeInterestedUser = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ removeInterestedUser error:", error);
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 // ✅ Navýšit zobrazení
-export const incrementViews = async (req, res) => {
+export const incrementViews = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
     const updated = await inzeratModel.findByIdAndUpdate(inzeratId, { $inc: { views: 1 } }, { new: true });
     if (!updated) return res.json({ success: false, message: "Inzerát nenalezen" });
     res.json({ success: true, message: "Zobrazení navýšeno", views: updated.views });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // ✅ Poblíž
-export const getNearbyInzerats = async (req, res) => {
+export const getNearbyInzerats = async (req, res, next) => {
   try {
     const { longitude, latitude, maxDistance } = req.query;
     const inzeraty = await inzeratModel.find({
@@ -605,10 +605,10 @@ export const getNearbyInzerats = async (req, res) => {
 
     res.json({ success: true, inzeratData: inzeraty });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
-export const selectWinner = async (req, res) => {
+export const selectWinner = async (req, res, next) => {
   try {
     const { inzeratId, winnerId } = req.body;
 
@@ -667,11 +667,11 @@ export const selectWinner = async (req, res) => {
     }
   } catch (err) {
     console.error("❌ selectWinner error:", err);
-    res.json({ success: false, message: err.message });
+    return next(err);
   }
 };
 // 🏆 Získání všech inzerátů, kde je uživatel výherce
-export const getWinnerInzerats = async (req, res) => {
+export const getWinnerInzerats = async (req, res, next) => {
   try {
     const { userId } = req.query;
 
@@ -710,7 +710,7 @@ export const getWinnerInzerats = async (req, res) => {
     });
   }
 };
-export const getPendingInzeraty = async (req, res) => {
+export const getPendingInzeraty = async (req, res, next) => {
   try {
     const inzeraty = await inzeratModel
       .find({ stav: "Čeká na schválení" })
@@ -737,7 +737,7 @@ export const getPendingInzeraty = async (req, res) => {
     });
   }
 };
-export const publishInzerat = async (req, res) => {
+export const publishInzerat = async (req, res, next) => {
   try {
     const { inzeratId } = req.body;
 
@@ -787,7 +787,7 @@ export const publishInzerat = async (req, res) => {
     });
   }
 };
-export const setInterestedUserLike = async (req, res) => {
+export const setInterestedUserLike = async (req, res, next) => {
   try {
     const { inzeratId, userId, like } = req.body;
 
@@ -814,7 +814,7 @@ export const setInterestedUserLike = async (req, res) => {
     res.status(500).json({ success: false, message: "Chyba serveru" });
   }
 };
-export const setInterestedUserRead = async (req, res) => {
+export const setInterestedUserRead = async (req, res, next) => {
   try {
     const { inzeratId, userId, read } = req.body;
 
@@ -845,7 +845,7 @@ export const setInterestedUserRead = async (req, res) => {
 // Žádné stránkování (potřebujeme všechny body na mapě najednou), žádný
 // HTML popis (ušetří desítky kB u velkých seznamů).
 // Podporuje volitelné filtry: kraj, kategorie, ukon, minCena, maxCena.
-export const getMapInzerats = async (req, res) => {
+export const getMapInzerats = async (req, res, next) => {
   try {
     const { kraj, kategorie, ukon } = req.query;
     const minCena = req.query.minCena !== undefined ? Number(req.query.minCena) : null;
@@ -883,6 +883,6 @@ export const getMapInzerats = async (req, res) => {
     return res.json({ success: true, markers: items });
   } catch (error) {
     console.error("❌ getMapInzerats error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };

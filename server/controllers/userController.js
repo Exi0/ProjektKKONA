@@ -42,7 +42,7 @@ const parsePhones = (raw) => {
 };
 
 // ------------------ UPDATE PROFILE ---------------------------
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const userId = req.user?.id || req.body.userId;
     if (!userId) return res.status(400).json({ success: false, message: 'Chybí ID uživatele' });
@@ -102,7 +102,7 @@ export const updateProfile = async (req, res) => {
 };
 
 // ------------------ GET USER DATA (private) ------------------
-export const getUserData = async (req, res) => {
+export const getUserData = async (req, res, next) => {
   try {
     const userId = req.userId;  // ✅ místo req.body
      const user = await userModel.findById(userId)
@@ -147,12 +147,12 @@ export const getUserData = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 // 📌 Přidání hodnocení s více kategoriemi
-export const addRating = async (req, res) => {
+export const addRating = async (req, res, next) => {
   // ⚠️ Upozornění: tato starší cesta k hodnocení zůstává funkční,
     // ale pro hodnocení v rámci zakázky použij /api/deal/rate (ten
     // kontroluje, že deal je "Dokončeno" a že strana ještě nehodnotila).
@@ -216,13 +216,13 @@ export const addRating = async (req, res) => {
       averageRatings: { ...avgRatings, overall },
     });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 
 // ✅ Získání hodnocení uživatele
-export const getRatings = async (req, res) => {
+export const getRatings = async (req, res, next) => {
   try {
     const { userId } = req.query;
 
@@ -282,12 +282,12 @@ export const getRatings = async (req, res) => {
       averageRatings: { ...avgRatings, overall },
     });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    return next(err);
   }
 };
 // ------------------ GET PUBLIC PROFILE -----------------------
 // 🔎 Public profil (rozšířeno o favorites info)
-export const getPublicUserProfile = async (req, res) => {
+export const getPublicUserProfile = async (req, res, next) => {
   try {
     const { userId } = req.params;
     // viewer Id buď z auth middleware (pokud je endpoint chráněný) nebo z query
@@ -354,12 +354,12 @@ export const getPublicUserProfile = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 // ⬇️ přidat/odebrat oblíbeného uživatele
 // addFavoriteUser
-export const addFavoriteUser = async (req, res) => {
+export const addFavoriteUser = async (req, res, next) => {
   try {
     const viewerId = req.userId;
     const { targetUserId } = req.body;
@@ -387,12 +387,12 @@ export const addFavoriteUser = async (req, res) => {
       isFavorited: true,
     });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // removeFavoriteUser
-export const removeFavoriteUser = async (req, res) => {
+export const removeFavoriteUser = async (req, res, next) => {
   try {
     const viewerId = req.userId;
     const { targetUserId } = req.body;
@@ -417,11 +417,11 @@ export const removeFavoriteUser = async (req, res) => {
       isFavorited: false,
     });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
-export const getTopUsers = async (req, res) => {
+export const getTopUsers = async (req, res, next) => {
   try {
     const topUsers = await userModel.aggregate([
       {
@@ -440,10 +440,10 @@ export const getTopUsers = async (req, res) => {
 
     res.json({ success: true, users: topUsers });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
-export const requestVerification = async (req, res) => {
+export const requestVerification = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Soubor chybí" });
@@ -470,24 +470,24 @@ export const requestVerification = async (req, res) => {
       verification: user.verification
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // 📌 ADMIN – list všech pending verifikací
-export const getPendingVerifications = async (req, res) => {
+export const getPendingVerifications = async (req, res, next) => {
   try {
     const users = await userModel.find({ "verification.status": "pending" })
       .select("name email ico avatarPath verification");
 
     res.json({ success: true, users });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // 📌 ADMIN – schválit uživatele
-export const approveVerification = async (req, res) => {
+export const approveVerification = async (req, res, next) => {
   try {
     const userId = req.params.id;
     const user = await userModel.findByIdAndUpdate(
@@ -501,17 +501,14 @@ export const approveVerification = async (req, res) => {
 
     res.json({ success: true, message: "✅ Verifikace schválena", user });
   } catch (err) {
-    console.log(err)
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // 📌 ADMIN – zamítnout uživatele
-export const rejectVerification = async (req, res) => {
+export const rejectVerification = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    console.log(req.params)
-    console.log(userId)
     const user = await userModel.findByIdAndUpdate(
       userId,
       { "verification.status": "rejected",
@@ -523,6 +520,6 @@ export const rejectVerification = async (req, res) => {
 
     res.json({ success: true, message: "❌ Verifikace zamítnuta", user });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
