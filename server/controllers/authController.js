@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import transporter from '../config/nodemailer.js';
 import { EMAIL_VERIFY_TEMPLATE,PASSWORD_RESET_TEMPLATE,NEWUSER_TEMPLATE} from '../config/emailTemplates.js';
-export const register = async (req,res)=>{
+export const register = async (req,res,next)=>{
     const {name,email,heslo,ico} = req.body;
 
     if(!name || !email || !heslo || !ico){
@@ -49,10 +49,13 @@ export const register = async (req,res)=>{
         return res.json({success:true})
     }
     catch(error){
-        res.json({success:false,type:"reg",message: error.message})
+        // type:"reg" zachováno kvůli frontendu; interní detail jde do logu přes handler
+        error.status = 400;
+        error.clientResponse = { success:false, type:"reg", message:"Registrace selhala" };
+        return next(error)
     }
 }
-export const login = async (req,res)=>{
+export const login = async (req,res,next)=>{
     const {email,heslo} = req.body;
     if(!email||!heslo){
         return res.json({success:false,
@@ -76,10 +79,10 @@ export const login = async (req,res)=>{
         });
         return res.json({success:true})
     }catch(error){
-        return res.json({success:false,message:error.message})
+        return next(error)
     }
 }
-export const logout = async (req,res)=>{
+export const logout = async (req,res,next)=>{
     try{
         res.clearCookie('token', {
             httpOnly:true,
@@ -88,11 +91,11 @@ export const logout = async (req,res)=>{
         });
         return res.json({success:true,message:'Byl jste odhlášen'});
     }catch(error){
-        return res.json({success:false,message:error.message});
+        return next(error)
     }
 }
 
-export const sendVerifyOtp = async (req, res) => {
+export const sendVerifyOtp = async (req, res, next) => {
   try {
     const { userId } = req.body;
 
@@ -126,15 +129,15 @@ export const sendVerifyOtp = async (req, res) => {
       subject: "✅ Ověření účtu – Projekt KKONA",
       html: htmlContent,
     };
+
     await transporter.sendMail(mailOptions);
 
     res.json({ success: true, message: "Ověřovací kód byl odeslán na e-mail." });
   } catch (error) {
-    console.error("❌ sendVerifyOtp error:", error);
-    res.json({ success: false, message: error.message });
+    return next(error);
   }
 };
-export const verifyEmail = async (req,res)=>{
+export const verifyEmail = async (req,res,next)=>{
     const {userId,otp}= req.body;
     if(!userId || !otp){
         return res.json({success:false, message:'Chybějící údaje'})
@@ -158,19 +161,19 @@ export const verifyEmail = async (req,res)=>{
         return res.json({success:true,message:'Email ověren'
         })
     }catch(error){
-        return res.json({success:false,message:error.message})
+        return next(error)
     }
 }
 
-export const isAuthenticated = async(req,res)=>{
+export const isAuthenticated = async(req,res,next)=>{
     try {
         return res.json({success:true})
     } catch (error) {
-        return res.json({success:false,message:error.message})
+        return next(error)
     }
 }
 
-export const sendResetOtp = async (req,res)=>{
+export const sendResetOtp = async (req,res,next)=>{
     const {email}=req.body;
     if(!email){
         return res.json({success:false,message:"Email je potřebný"})
@@ -197,10 +200,10 @@ export const sendResetOtp = async (req,res)=>{
         await transporter.sendMail(mailOption)
          return res.json({success:true, message:"Kod pro reset odeslan"})
     } catch (error) {
-        return res.json({success:false,message:error.message})
+        return next(error)
     }
 }
-export const resetPassword = async (req,res)=>{
+export const resetPassword = async (req,res,next)=>{
     const {otp,email,newPassword}= req.body;
     if(!otp || !email || !newPassword){
         return res.json({success:false, message:'Email, kod a nové heslo jsou potřebné'})
@@ -228,6 +231,6 @@ export const resetPassword = async (req,res)=>{
         return res.json({success:true,message:"Heslo uspěšně aktualizováno"})
     
     } catch (error) {
-        return res.json({success:false,message:error.message})
+        return next(error)
     }
 }

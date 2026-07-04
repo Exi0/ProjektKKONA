@@ -85,17 +85,25 @@ app.use("/api/requests", requestRouter);
 app.use("/api/inzeratRequest", inzeratRequestRouter);
 app.use("/api/deal", dealRouter);
 app.use("/api/saved-searches", savedSearchRouter);
-// ✅ NOVÉ: error handler pro multer (nepovolený typ souboru / příliš velký soubor)
+// ✅ Centrální error handler
+// - plný detail chyby jde jen do server logu (console.error)
+// - klientovi se u 5xx posílá generická hláška (žádný únik interních detailů)
+// - multer chyby (typ/velikost souboru) mají srozumitelné hlášky → pošleme je
+// - handler respektuje err.clientResponse, pokud ho controller nastavil (např. register: type:"reg")
 app.use((err, req, res, next) => {
-  console.error(err); // full detail stays in server logs only
+  if (!err) return next();
 
-  // Multer (upload) chyby mají srozumitelné hlášky → necháme projít
+  console.error(err);
+
+  if (err.clientResponse) {
+    return res.status(err.status || 400).json(err.clientResponse);
+  }
+
   if (err.name === 'MulterError') {
     return res.status(400).json({ success: false, message: err.message });
   }
 
   const status = err.status || 500;
-  // 5xx → generická hláška ven; 4xx (např. validace) → původní zpráva
   const message = status >= 500 ? 'Chyba serveru' : err.message;
   return res.status(status).json({ success: false, message });
 });
